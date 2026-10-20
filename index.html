@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registro de asistencias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef2f7; --panel:#ffffff; --ink:#14213d; --muted:#5b6b86; --line:#dde4ee; --brand:#2b59ff; --brand-soft:#e6ecff;
+  --ok:#12a150; --ok-bg:#dcf5e6; --late:#d98a00; --late-bg:#fff0cf; --bad:#d6334a; --bad-bg:#fde3e7; --just:#6b4fd8; --just-bg:#ebe5ff;
+  --shadow:0 1px 2px rgba(20,33,61,.06),0 8px 24px rgba(20,33,61,.06);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0d1424; --panel:#162036; --ink:#e8edf8; --muted:#93a3c0; --line:#26334f; --brand:#6d8cff; --brand-soft:#1f2c52;
+  --ok:#3ad07f; --ok-bg:#123a28; --late:#f0b13b; --late-bg:#3d2f10; --bad:#ff6b80; --bad-bg:#431c26; --just:#a592ff; --just-bg:#2c2557; --shadow:none; color-scheme:dark}
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:Figtree,system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;min-height:100vh}
+h1,h2,h3{font-family:'Bricolage Grotesque',Figtree,sans-serif;letter-spacing:-.02em}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+
+/* Cabecera */
+.top{display:flex;flex-wrap:wrap;gap:20px;align-items:center;justify-content:space-between;margin-bottom:24px}
+.top h1{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;line-height:1.05}
+.top p{color:var(--muted);margin-top:6px}
+.datebox{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px;box-shadow:var(--shadow)}
+.datebox input{border:0;background:transparent;padding:8px 10px;font-weight:600;border-radius:10px}
+.iconbtn{border:0;background:var(--brand-soft);color:var(--brand);width:38px;height:38px;border-radius:10px;cursor:pointer;font-size:1.1rem;font-weight:700}
+.iconbtn:hover{filter:brightness(.95)}
+
+/* Resumen del día */
+.summary{display:grid;grid-template-columns:260px 1fr;gap:16px;margin-bottom:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
+.ringcard{display:flex;align-items:center;gap:16px;padding:18px}
+.ring{--p:0;width:96px;height:96px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:conic-gradient(var(--ok) calc(var(--p)*1%),var(--line) 0)}
+.ring span{width:74px;height:74px;border-radius:50%;background:var(--panel);display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:1.35rem}
+.ringcard b{display:block;font-size:1.05rem}
+.ringcard small{color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{padding:16px 18px;border-radius:18px;border:1px solid transparent}
+.stat strong{font-family:'Bricolage Grotesque';font-size:2rem;font-weight:800;line-height:1;display:block}
+.stat span{font-size:.92rem;font-weight:500}
+.s-p{background:var(--ok-bg);color:var(--ok)}.s-t{background:var(--late-bg);color:var(--late)}
+.s-f{background:var(--bad-bg);color:var(--bad)}.s-j{background:var(--just-bg);color:var(--just)}
+
+/* Zona principal */
+.main{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
+.list{padding:8px 0 4px}
+.tools{display:flex;flex-wrap:wrap;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.tools input,.tools select,.field input{border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px}
+.tools input[type=search]{flex:1;min-width:160px}
+.btn{border:0;border-radius:12px;padding:10px 16px;font-weight:600;cursor:pointer;background:var(--brand);color:#fff}
+.btn.ghost{background:var(--brand-soft);color:var(--brand)}
+.btn:hover{filter:brightness(1.07)}
+.row{display:grid;grid-template-columns:44px 1fr auto auto;gap:14px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.avatar{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-weight:700;color:#fff;font-family:'Bricolage Grotesque'}
+.who b{display:block;font-weight:600}.who small{color:var(--muted)}
+.seg{display:flex;gap:4px;background:var(--bg);padding:4px;border-radius:14px}
+.seg button{border:0;background:transparent;border-radius:10px;padding:8px 12px;font-size:.88rem;font-weight:600;cursor:pointer;color:var(--muted);transition:background .15s,color .15s,transform .1s}
+.seg button:active{transform:scale(.96)}
+.seg button.on[data-s=P]{background:var(--ok);color:#fff}
+.seg button.on[data-s=T]{background:var(--late);color:#fff}
+.seg button.on[data-s=F]{background:var(--bad);color:#fff}
+.seg button.on[data-s=J]{background:var(--just);color:#fff}
+.del{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:1.2rem;border-radius:8px;width:32px;height:32px}
+.del:hover{background:var(--bad-bg);color:var(--bad)}
+.empty{padding:40px 24px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:1.1rem;margin-bottom:4px}
+
+/* Panel lateral */
+.side{display:grid;gap:16px}
+.panel{padding:18px}
+.panel h2{font-size:1.15rem;margin-bottom:12px}
+.field{display:grid;gap:6px;margin-bottom:10px;font-size:.9rem;font-weight:500}
+.field input{width:100%}
+.hist{list-style:none;padding:0;display:grid;gap:8px;max-height:260px;overflow:auto}
+.hist button{width:100%;text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+.hist button.cur{border-color:var(--brand);background:var(--brand-soft)}
+.hist small{color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:600;opacity:0;pointer-events:none;transition:.25s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:900px){
+  .summary,.main{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:640px){
+  .row{grid-template-columns:44px 1fr auto}
+  .seg{grid-column:1/-1;justify-content:space-between}
+  .seg button{flex:1}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Registro de asistencias</h1>
+      <p id="fechaLarga"></p>
+    </div>
+    <div class="datebox">
+      <button class="iconbtn" id="prev" aria-label="Día anterior">‹</button>
+      <input type="date" id="fecha" aria-label="Fecha de la sesión">
+      <button class="iconbtn" id="next" aria-label="Día siguiente">›</button>
+    </div>
+  </header>
+
+  <section class="summary" aria-label="Resumen del día">
+    <div class="card ringcard">
+      <div class="ring" id="ring"><span id="pct">0%</span></div>
+      <div><b>Asistencia del día</b><small id="marcados">0 de 0 marcados</small></div>
+    </div>
+    <div class="stats">
+      <div class="stat s-p"><strong id="nP">0</strong><span>Presentes</span></div>
+      <div class="stat s-t"><strong id="nT">0</strong><span>Tardanzas</span></div>
+      <div class="stat s-f"><strong id="nF">0</strong><span>Faltas</span></div>
+      <div class="stat s-j"><strong id="nJ">0</strong><span>Justificados</span></div>
+    </div>
+  </section>
+
+  <div class="main">
+    <section class="card list" aria-label="Lista de estudiantes">
+      <div class="tools">
+        <input type="search" id="buscar" placeholder="Buscar estudiante" aria-label="Buscar estudiante">
+        <select id="filtroCurso" aria-label="Filtrar por curso"></select>
+        <button class="btn ghost" id="todosP">Marcar todos presentes</button>
+      </div>
+      <div id="lista"></div>
+    </section>
+
+    <aside class="side">
+      <form class="card panel" id="formAlta">
+        <h2>Agregar estudiante</h2>
+        <label class="field">Nombre completo
+          <input id="nombre" required maxlength="60" placeholder="Ej. Lucía Mendoza">
+        </label>
+        <label class="field">Curso o sección
+          <input id="curso" required maxlength="20" placeholder="Ej. 3.º B" list="cursos">
+        </label>
+        <datalist id="cursos"></datalist>
+        <button class="btn" type="submit" style="width:100%">Agregar estudiante</button>
+      </form>
+
+      <div class="card panel">
+        <h2>Días registrados</h2>
+        <ul class="hist" id="hist"></ul>
+        <button class="btn ghost" id="csv" style="width:100%;margin-top:12px">Descargar CSV</button>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const KEY='registro-asistencias-v1';
+const ESTADOS={P:'Presente',T:'Tardanza',F:'Falta',J:'Justificado'};
+const COLORES=['#2b59ff','#12a150','#d98a00','#6b4fd8','#d6334a','#0e8fa8','#c2410c'];
+let db={alumnos:[],registros:{}};
+try{const g=localStorage.getItem(KEY);if(g)db=JSON.parse(g)}catch(e){}
+if(!db.alumnos.length){ // datos de ejemplo
+  db.alumnos=[['Ana Torres','1.º A'],['Bruno Salas','1.º A'],['Camila Ríos','1.º A'],['Diego Paredes','2.º B'],['Elena Quispe','2.º B'],['Fabián Cruz','2.º B']]
+    .map((a,i)=>({id:'a'+i,nombre:a[0],curso:a[1]}));
+}
+const $=id=>document.getElementById(id);
+const hoy=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+let fecha=hoy();
+
+const guardar=()=>{try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}};
+const esc=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2200)};
+const color=s=>COLORES[[...s].reduce((a,c)=>a+c.charCodeAt(0),0)%COLORES.length];
+const iniciales=n=>n.trim().split(/\s+/).slice(0,2).map(p=>p[0]).join('').toUpperCase();
+const fechaLarga=f=>new Date(f+'T12:00:00').toLocaleDateString('es-PE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+function render(){
+  $('fecha').value=fecha;
+  $('fechaLarga').textContent=fechaLarga(fecha);
+  const reg=db.registros[fecha]||{};
+  // cursos
+  const cursos=[...new Set(db.alumnos.map(a=>a.curso))].sort();
+  const sel=$('filtroCurso'),actual=sel.value||'';
+  sel.innerHTML='<option value="">Todos los cursos</option>'+cursos.map(c=>`<option ${c===actual?'selected':''}>${esc(c)}</option>`).join('');
+  $('cursos').innerHTML=cursos.map(c=>`<option value="${esc(c)}">`).join('');
+  // filtro
+  const q=$('buscar').value.toLowerCase(),fc=sel.value;
+  const vis=db.alumnos.filter(a=>a.nombre.toLowerCase().includes(q)&&(!fc||a.curso===fc));
+  $('lista').innerHTML=vis.length?vis.map(a=>`
+    <div class="row">
+      <div class="avatar" style="background:${color(a.nombre)}" aria-hidden="true">${esc(iniciales(a.nombre))}</div>
+      <div class="who"><b>${esc(a.nombre)}</b><small>${esc(a.curso)}</small></div>
+      <div class="seg" role="group" aria-label="Estado de ${esc(a.nombre)}">
+        ${Object.entries(ESTADOS).map(([k,v])=>`<button data-id="${a.id}" data-s="${k}" class="${reg[a.id]===k?'on':''}" aria-pressed="${reg[a.id]===k}">${v}</button>`).join('')}
+      </div>
+      <button class="del" data-del="${a.id}" aria-label="Eliminar a ${esc(a.nombre)}" title="Eliminar">×</button>
+    </div>`).join(''):
+    `<div class="empty"><b>No hay estudiantes para mostrar</b>Agrega uno desde el formulario o cambia el filtro.</div>`;
+  // estadísticas (sobre todos los alumnos)
+  const c={P:0,T:0,F:0,J:0};
+  db.alumnos.forEach(a=>{if(reg[a.id])c[reg[a.id]]++});
+  const marc=c.P+c.T+c.F+c.J,tot=db.alumnos.length;
+  ['P','T','F','J'].forEach(k=>$('n'+k).textContent=c[k]);
+  const pct=tot?Math.round((c.P+c.T)/tot*100):0;
+  $('ring').style.setProperty('--p',pct);$('pct').textContent=pct+'%';
+  $('marcados').textContent=`${marc} de ${tot} marcados`;
+  // historial
+  const dias=Object.keys(db.registros).filter(d=>Object.keys(db.registros[d]).length).sort().reverse();
+  $('hist').innerHTML=dias.length?dias.map(d=>{
+    const r=db.registros[d],n=Object.values(r);
+    return `<li><button data-d="${d}" class="${d===fecha?'cur':''}"><span>${new Date(d+'T12:00:00').toLocaleDateString('es-PE',{weekday:'short',day:'numeric',month:'short'})}</span><small>${n.filter(x=>x==='P'||x==='T').length} asistieron · ${n.filter(x=>x==='F').length} faltas</small></button></li>`}).join('')
+    :'<li><small style="color:var(--muted)">Aún no hay días registrados. Marca la asistencia de hoy para empezar.</small></li>';
+}
+
+function marcar(id,s){
+  const reg=db.registros[fecha]=db.registros[fecha]||{};
+  if(reg[id]===s)delete reg[id];else reg[id]=s;
+  guardar();render();
+}
+function mover(n){const d=new Date(fecha+'T12:00:00');d.setDate(d.getDate()+n);fecha=d.toISOString().slice(0,10);render()}
+
+$('lista').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.s)marcar(b.dataset.id,b.dataset.s);
+  if(b.dataset.del){
+    const a=db.alumnos.find(x=>x.id===b.dataset.del);
+    if(confirm(`¿Eliminar a ${a.nombre}? También se borrarán sus asistencias.`)){
+      db.alumnos=db.alumnos.filter(x=>x.id!==a.id);
+      Object.values(db.registros).forEach(r=>delete r[a.id]);
+      guardar();render();toast('Estudiante eliminado');
+    }
+  }
+});
+$('formAlta').addEventListener('submit',e=>{
+  e.preventDefault();
+  const n=$('nombre').value.trim(),c=$('curso').value.trim();
+  if(!n||!c)return;
+  db.alumnos.push({id:'a'+Date.now(),nombre:n,curso:c});
+  guardar();e.target.reset();render();toast('Estudiante agregado');
+});
+$('todosP').onclick=()=>{
+  const reg=db.registros[fecha]=db.registros[fecha]||{};
+  const fc=$('filtroCurso').value,q=$('buscar').value.toLowerCase();
+  db.alumnos.filter(a=>a.nombre.toLowerCase().includes(q)&&(!fc||a.curso===fc)).forEach(a=>reg[a.id]='P');
+  guardar();render();toast('Todos marcados como presentes');
+};
+$('hist').addEventListener('click',e=>{const b=e.target.closest('button[data-d]');if(b){fecha=b.dataset.d;render()}});
+$('fecha').onchange=e=>{if(e.target.value){fecha=e.target.value;render()}};
+$('prev').onclick=()=>mover(-1);$('next').onclick=()=>mover(1);
+$('buscar').oninput=render;$('filtroCurso').onchange=render;
+$('csv').onclick=()=>{
+  const filas=[['Fecha','Estudiante','Curso','Estado']];
+  Object.keys(db.registros).sort().forEach(d=>db.alumnos.forEach(a=>{
+    const s=db.registros[d][a.id];if(s)filas.push([d,a.nombre,a.curso,ESTADOS[s]]);
+  }));
+  if(filas.length===1)return toast('Todavía no hay asistencias para exportar');
+  const csv='\ufeff'+filas.map(f=>f.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='asistencias.csv';a.click();toast('CSV descargado');
+};
+render();
+</script>
+</body>
+</html>
